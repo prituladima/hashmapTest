@@ -1,7 +1,7 @@
 package tests.maptests.identity_object;
 
-import org.eclipse.collections.api.block.HashingStrategy;
-import org.eclipse.collections.impl.map.strategy.mutable.UnifiedMapWithHashingStrategy;
+//import org.eclipse.collections.api.block.HashingStrategy;
+//import org.eclipse.collections.impl.map.strategy.mutable.UnifiedMapWithHashingStrategy;
 import tests.maptests.IMapTest;
 import tests.maptests.ITestSet;
 import tests.maptests.object_prim.AbstractObjKeyGetTest;
@@ -30,17 +30,18 @@ public class GsIdentityMapTest implements ITestSet
 
     private static <T, V> Map<T, V> makeMap( final int size, final float fillFactor )
     {
-        return new UnifiedMapWithHashingStrategy<>(new HashingStrategy<T>() {
-                        @Override
-                        public int computeHashCode(T object) {
-                            return System.identityHashCode( object );
-                        }
-
-                        @Override
-                        public boolean equals(T object1, T object2) {
-                            return object1 == object2;
-                        }
-                    }, size, fillFactor );
+        return null;
+        //        return new UnifiedMapWithHashingStrategy<>(new HashingStrategy<T>() {
+//                        @Override
+//                        public int computeHashCode(T object) {
+//                            return System.identityHashCode( object );
+//                        }
+//
+//                        @Override
+//                        public boolean equals(T object1, T object2) {
+//                            return object1 == object2;
+//                        }
+//                    }, size, fillFactor );
     }
 
     private static class GsIdentityMapGetTest extends AbstractObjKeyGetTest {

@@ -38,6 +38,14 @@ questions.
         <maven>3.0</maven>
     </prerequisites>
 
+    <repositories>
+        <repository>
+            <id>maven-google</id>
+            <name>Google repository</name>
+            <url>https://maven.google.com/</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.openjdk.jmh</groupId>
@@ -79,17 +87,17 @@ questions.
         </dependency>
 
         <!-- Goldman Sachs, now Eclipse, collections -->
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections-api</artifactId>
-            <version>8.1.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections</artifactId>
-            <version>8.1.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.eclipse.collections</groupId>-->
+<!--            <artifactId>eclipse-collections-api</artifactId>-->
+<!--            <version>8.1.0</version>-->
+<!--        </dependency>-->
+<!---->
+<!--        <dependency>-->
+<!--            <groupId>org.eclipse.collections</groupId>-->
+<!--            <artifactId>eclipse-collections</artifactId>-->
+<!--            <version>8.1.0</version>-->
+<!--        </dependency>-->
 
         <!-- HPPC -->
         <dependency>
@@ -104,6 +112,20 @@ questions.
             <artifactId>junit</artifactId>
             <version>4.12</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/androidx.collection/collection -->
+        <dependency>
+            <groupId>androidx.collection</groupId>
+            <artifactId>collection</artifactId>
+            <version>1.1.0</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/androidx.annotation/annotation -->
+        <dependency>
+            <groupId>androidx.annotation</groupId>
+            <artifactId>annotation</artifactId>
+            <version>1.1.0</version>
         </dependency>
 
 
@@ -187,6 +209,28 @@ questions.
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.17</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.6</version>
+                    <executions>
+                        <execution>
+                            <id>unpack-dependencies</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>unpack-dependencies</goal>
+                            </goals>
+                            <configuration>
+                                <excludeScope>system</excludeScope>
+                                <excludes>META-INF/*.SF</excludes>
+                                <excludes>META-INF/*.DSA</excludes>
+                                <excludes>META-INF/*.RSA</excludes>
+                                <excludeGroupIds>junit,org.mockito,org.hamcrest</excludeGroupIds>
+                                <outputDirectory>${project.build.directory}/classes</outputDirectory>
+                            </configuration>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>

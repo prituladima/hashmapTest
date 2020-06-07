@@ -30,18 +30,18 @@ public class MapTestRunner {
     private static final boolean BILLION_TEST = false;
 
     private static final int START_SIZE = BILLION_TEST ? 1000 * 1000 * 1000 : 10 * 1000;
-    private static final int TOTAL_SIZE = BILLION_TEST ? 1000 * 1000 * 1000 : 100 * 1000 * 1000;
-    private final static int[] MAP_SIZES;
+    private static final int TOTAL_SIZE = BILLION_TEST ? 1000 * 1000 * 1000 : 1_000_000;
+    private final static int[] MAP_SIZES = new int[]{1_000_000};;
 
     static {
-        MAP_SIZES = new int[(int) (Math.log10( TOTAL_SIZE ) - Math.log10( START_SIZE ) + 1)];
-        int start = START_SIZE;
-        int p = 0;
-        while ( start <= TOTAL_SIZE )
-        {
-            MAP_SIZES[ p++ ] = start;
-            start *= 10;
-        }
+//        MAP_SIZES = new int[(int) (Math.log10( TOTAL_SIZE ) - Math.log10( START_SIZE ) + 1)];
+//        int start = START_SIZE;
+//        int p = 0;
+//        while ( start <= TOTAL_SIZE )
+//        {
+//            MAP_SIZES[ p++ ] = start;
+//            start *= 10;
+//        }
     }
 
     private static final float FILL_FACTOR = 0.5f;
@@ -65,16 +65,17 @@ public class MapTestRunner {
             TroveMapTest.class, //+
     };
     private static final Class[] TESTS_WRAPPER = {
-            FastUtilObjMapTest.class,
-            KolobokeMutableObjTest.class, //+
-            KolobokeNotNullKeyObjTest.class,
-            KolobokeHashCodeMixingObjTest.class,
-            HppcObjMapTest.class,
-            GsObjMapTest.class,
-            JdkMapTest.class,  //+
+//            FastUtilObjMapTest.class,
+//            KolobokeMutableObjTest.class, //+
+//            KolobokeNotNullKeyObjTest.class,
+//            KolobokeHashCodeMixingObjTest.class,
+//            HppcObjMapTest.class,
+//            GsObjMapTest.class,
+//            JdkMapTest.class,  //+
             JdkMapTestDifferentCapacity.class,  //+
-            TroveObjMapTest.class,   //+
-            ObjObjMapTest.class   //
+//            TroveObjMapTest.class,   //+
+//            ObjObjMapTest.class,   //
+            ArrayMapTest.class
     };
     private static final Class[] TESTS_PRIMITIVE_WRAPPER = {
             FastUtilIntObjectMapTest.class,
@@ -118,12 +119,12 @@ public class MapTestRunner {
     private static String runTestSet(final String testSetName) throws RunnerException, InstantiationException, IllegalAccessException
     {
         final List<Class> tests = new ArrayList<>();
-        tests.addAll( Arrays.asList( TESTS_ARTICLE ) );
-        tests.addAll( Arrays.asList( TESTS_PRIMITIVE ) );
+//        tests.addAll( Arrays.asList( TESTS_ARTICLE ) );
+//        tests.addAll( Arrays.asList( TESTS_PRIMITIVE ) );
         tests.addAll( Arrays.asList( TESTS_WRAPPER ) );
-        tests.addAll( Arrays.asList( TESTS_PRIMITIVE_WRAPPER ) );
-        tests.addAll( Arrays.asList( TESTS_WRAPPER_PRIMITIVE ) );
-        tests.addAll( Arrays.asList( TESTS_IDENTITY ) );
+//        tests.addAll( Arrays.asList( TESTS_PRIMITIVE_WRAPPER ) );
+//        tests.addAll( Arrays.asList( TESTS_WRAPPER_PRIMITIVE ) );
+//        tests.addAll( Arrays.asList( TESTS_IDENTITY ) );
 
         //first level: test class, second level - map size
         final Map<String, Map<Integer, String>> results = new HashMap<>();
@@ -146,7 +147,7 @@ public class MapTestRunner {
                         .warmupIterations(10)
                         .measurementBatchSize(TOTAL_SIZE / mapSize)
                         .measurementIterations(8)
-                        .jvmArgsAppend("-Xmx30G")
+//                        .jvmArgsAppend("-Xmx30G")
                         .param("m_mapSize", Integer.toString(mapSize))
                         .param("m_className", testClass.getCanonicalName())
                         .param("m_testType", testSetName)
