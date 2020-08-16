@@ -81,10 +81,10 @@ public class ManualTests {
                     .setCellValue(String.valueOf(TEST_STEPS * tests));
         }
 
-        final CellStyle backgroundStyleRed = workbook.createCellStyle();
-        backgroundStyleRed.setFillForegroundColor(IndexedColors.RED.getIndex());
-        final CellStyle backgroundStyleGreen = workbook.createCellStyle();
-        backgroundStyleGreen.setFillForegroundColor(IndexedColors.RED.getIndex());
+//        final CellStyle backgroundStyleRed = workbook.createCellStyle();
+//        backgroundStyleRed.setFillForegroundColor(IndexedColors.RED.getIndex());
+//        final CellStyle backgroundStyleGreen = workbook.createCellStyle();
+//        backgroundStyleGreen.setFillForegroundColor(IndexedColors.RED.getIndex());
 
 
         int rowCount = 0;
@@ -98,13 +98,13 @@ public class ManualTests {
                 Cell cell = row.createCell(++columnCount);
                 cell.setCellValue(s);
 
-                if (!s.isEmpty()) {
-                    if (s.equals("H")) {
-                        cell.setCellStyle(backgroundStyleRed);
-                    } else {
-                        cell.setCellStyle(backgroundStyleGreen);
-                    }
-                }
+//                if (!s.isEmpty()) {
+//                    if (s.equals("H")) {
+//                        cell.setCellStyle(backgroundStyleRed);
+//                    } else {
+//                        cell.setCellStyle(backgroundStyleGreen);
+//                    }
+//                }
             }
         }
 
