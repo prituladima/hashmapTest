@@ -1,122 +1,167 @@
-import android.util.SparseArray;
-import android.util.SparseBooleanArray;
-import android.util.SparseIntArray;
-import android.util.SparseLongArray;
 import androidx.collection.ArrayMap;
-import androidx.collection.ArraySet;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.IndexedColors;
-import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFSheetConditionalFormatting;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Supplier;
+
+import static org.apache.poi.ss.usermodel.ComparisonOperator.EQUAL;
+
 
 public class ManualTests {
     public static void main(String[] args) throws IOException {
 
-//        System.out.println(get(new char[]{'A', 'H', 'A', '\0', 'H'}));
-//        if (true) return;
+        final long globalStart = System.currentTimeMillis();
 
-        long globalStart = System.currentTimeMillis();
-        final int[] PUTS = {1, 100};
-        final int[] TEST = {1, 15};
+        final int[] PUTS = {1, 300};
+        final int[] TEST = {1, 10};
         final int TEST_STEPS = 100;
-        final int WARM_UP = 10;
+        final int WARN_UP_ITERATIONS = 5;
+        final int NUMBER_OF_ITERATIONS = 10;
+        final String range = String.format("A1:%s%s", getColumn(TEST[1] + 1), PUTS[1] + 1);
+
         String uuidIgnore = uuid();
 
-        char[][][] results = new char[PUTS[1]][TEST[1]][WARM_UP];
-        //Amount of puts per one Map instance
-        for (int k = 0; k < WARM_UP; k++)
+        final char[][][] results = new char[PUTS[1]][TEST[1]][NUMBER_OF_ITERATIONS];
+
+
+        final String[] keys = new String[TEST_STEPS * TEST[1]];
+        final String[] values = new String[TEST_STEPS * TEST[1]];
+        for (int i = 0; i < TEST_STEPS * TEST[1]; i++) {
+            keys[i] = uuid();
+            values[i] = uuid();
+        }
+
+        //First 5 iterations are for warm-up and are not counted;
+        //Anything else are counted and aggregated as a one result;
+        for (int iteration = 0; iteration < NUMBER_OF_ITERATIONS; iteration++) {
+
             for (int puts = PUTS[0]; puts < PUTS[1]; puts++) {
-                //Amount of hundred tests
+
+                //We gonna create
                 for (int tests = TEST[0]; tests < TEST[1]; tests++) {
-                    long hashMapRes;
+
+                    //Start working with HashMap
+                    final long hashMapRes;
 
                     long start = System.nanoTime();
                     for (int i = 0; i < TEST_STEPS * tests; i++) {
                         Map<String, String> stringStringMap = new HashMap<>(0);
                         for (int j = 0; j < puts; j++) {
-                            stringStringMap.put(uuid(), uuid());
+                            stringStringMap.put(keys[i], values[i]);
                         }
                     }
                     long end = System.nanoTime();
                     hashMapRes = end - start;
-//                System.out.printf("%d ", hashMapRes = end - start);
+                    //End working with HashMap
 
-                    long arrayMapRes;
+
+                    //Start working with ArrayMap
+                    final long arrayMapRes;
                     start = System.nanoTime();
                     for (int i = 0; i < TEST_STEPS * tests; i++) {
                         Map<String, String> stringStringMap = new ArrayMap<>();
                         for (int j = 0; j < puts; j++) {
-                            stringStringMap.put(uuid(), uuid());
+                            stringStringMap.put(keys[i], values[i]);
                         }
                     }
                     end = System.nanoTime();
-//                System.out.printf("%d ", arrayMapRes = end - start);
+
                     arrayMapRes = end - start;
-                    if (Math.abs(hashMapRes - arrayMapRes) < 100) {
-                        results[puts][tests][k] = '\0';
-                    } else {
-                        results[puts][tests][k] = hashMapRes > arrayMapRes ? 'A' : 'H';
-                    }
+                    //End working with ArrayMap
+
+
+//                    if (Math.abs(hashMapRes - arrayMapRes) < 50) {
+//                        results[puts][tests][k] = '\0';
+//                    } else {
+                    results[puts][tests][iteration] = hashMapRes > arrayMapRes ? 'A' : 'H';
+//                    }
 
                 }
-//            System.out.println();
+
             }
+        }
 
         XSSFWorkbook workbook = new XSSFWorkbook();
-        XSSFSheet sheet = workbook.createSheet("Maps bench");
+        for (int iteration = 0; iteration < NUMBER_OF_ITERATIONS + 1; iteration++) {
 
 
-        int firstColumnCount = 0;
-        Row firstRow = sheet.createRow(0);
-        for (int tests = TEST[0]; tests < TEST[1]; tests++) {
-            firstRow.createCell(++firstColumnCount)
-                    .setCellValue(String.valueOf(TEST_STEPS * tests));
-        }
+            String name = String.format("%s #%d.", iteration < WARN_UP_ITERATIONS ? "Warm up" : "Iteration", iteration);
+            XSSFSheet sheet = workbook.createSheet(iteration == NUMBER_OF_ITERATIONS ? "Aggregated" : name);
 
-//        final CellStyle backgroundStyleRed = workbook.createCellStyle();
-//        backgroundStyleRed.setFillForegroundColor(IndexedColors.RED.getIndex());
-//        final CellStyle backgroundStyleGreen = workbook.createCellStyle();
-//        backgroundStyleGreen.setFillForegroundColor(IndexedColors.RED.getIndex());
-
-
-        int rowCount = 0;
-        for (int puts = PUTS[0]; puts < PUTS[1]; puts++) {
-            Row row = sheet.createRow(++rowCount);
-            row.createCell(0).setCellValue(puts);
-            int columnCount = 0;
+            int firstColumnCount = 0;
+            Row firstRow = sheet.createRow(0);
             for (int tests = TEST[0]; tests < TEST[1]; tests++) {
-                char res = get(Arrays.copyOfRange(results[puts][tests], WARM_UP / 2, WARM_UP));
-                String s = String.valueOf(res == '\0' ? "" : res);
-                Cell cell = row.createCell(++columnCount);
-                cell.setCellValue(s);
-
-//                if (!s.isEmpty()) {
-//                    if (s.equals("H")) {
-//                        cell.setCellStyle(backgroundStyleRed);
-//                    } else {
-//                        cell.setCellStyle(backgroundStyleGreen);
-//                    }
-//                }
+                firstRow.createCell(++firstColumnCount)
+                        .setCellValue(String.valueOf(TEST_STEPS * tests));
             }
+
+            int rowCount = 0;
+            for (int puts = PUTS[0]; puts < PUTS[1]; puts++) {
+                Row row = sheet.createRow(++rowCount);
+                row.createCell(0).setCellValue(puts);
+                int columnCount = 0;
+                for (int tests = TEST[0]; tests < TEST[1]; tests++) {
+                    char res;
+                    if (iteration == NUMBER_OF_ITERATIONS) {
+                        res = getMostRepeatingCharacter(Arrays.copyOfRange(results[puts][tests], WARN_UP_ITERATIONS, NUMBER_OF_ITERATIONS));
+                    } else {
+                        res = results[puts][tests][iteration];
+                    }
+                    String s = String.valueOf(res == '\0' ? "" : res);
+                    Cell cell = row.createCell(++columnCount);
+                    cell.setCellValue(s);
+
+                }
+            }
+            SheetConditionalFormatting sheetCF = sheet.getSheetConditionalFormatting();
+
+            ConditionalFormattingRule rule1 = sheetCF.createConditionalFormattingRule(EQUAL, "\"H\"");
+            PatternFormatting fill1 = rule1.createPatternFormatting();
+            fill1.setFillBackgroundColor(IndexedColors.RED.index);
+            fill1.setFillPattern(PatternFormatting.SOLID_FOREGROUND);
+
+            ConditionalFormattingRule rule2 = sheetCF.createConditionalFormattingRule(EQUAL, "\"A\"");
+            PatternFormatting fill2 = rule2.createPatternFormatting();
+            fill2.setFillBackgroundColor(IndexedColors.GREEN.index);
+            fill2.setFillPattern(PatternFormatting.SOLID_FOREGROUND);
+
+            CellRangeAddress[] regions = {
+                    CellRangeAddress.valueOf(range)
+            };
+            sheetCF.addConditionalFormatting(regions, rule1, rule2);
+
         }
 
-
-        try (FileOutputStream outputStream = new FileOutputStream("Maps" + new Date().getTime() + ".xlsx")) {
+        try (FileOutputStream outputStream = new FileOutputStream("HashMap and ArrayMap heat map. From " + new Date().getTime() + ".xlsx")) {
             workbook.write(outputStream);
         }
 
-        System.out.println("Time needed in min: " + (System.currentTimeMillis() - globalStart) / (60.0 * 1000));
+        System.out.printf("Time needed in min: %f%n", (System.currentTimeMillis() - globalStart) / (60.0 * 1000));
     }
 
-    protected static char get(char[] results) {
+    protected static String getColumn(int columnNumber) {
+
+        StringBuilder columnName = new StringBuilder();
+        while (columnNumber > 0) {
+            int rem = columnNumber % 26;
+            if (rem == 0) {
+                columnName.append("Z");
+                columnNumber = (columnNumber / 26) - 1;
+            } else {
+                columnName.append((char) ((rem - 1) + 'A'));
+                columnNumber = columnNumber / 26;
+            }
+        }
+        return columnName.reverse().toString();
+    }
+
+    protected static char getMostRepeatingCharacter(char[] results) {
         Map<Character, Integer> multiSet = new HashMap<>();
         for (char result : results) {
             multiSet.merge(result, 1, Integer::sum);
@@ -130,8 +175,8 @@ public class ManualTests {
                 maxChar = ch;
             }
         }
-        if (maxChar != '\0' && multiSet.getOrDefault('H', 0) >= multiSet.getOrDefault('A', 0)) {
-            return 'H';
+        if (multiSet.getOrDefault('H', 0).equals(multiSet.getOrDefault('A', 0))) {
+            return '\0';
         }
         return maxChar;
     }
