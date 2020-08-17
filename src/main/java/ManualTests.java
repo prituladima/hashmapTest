@@ -18,18 +18,18 @@ public class ManualTests {
 
         final long globalStart = System.currentTimeMillis();
 
-        final int[] PUTS = {1, 300};
+        final int[] MAP_SIZE = {1, 300};
         final int[] TEST = {1, 10};
         final int TEST_STEPS = 100;
+
         final int WARN_UP_ITERATIONS = 5;
-        final int NUMBER_OF_ITERATIONS = 10;
-        final String range = String.format("A1:%s%s", getColumn(TEST[1] + 1), PUTS[1] + 1);
+        final int NUMBER_OF_ITERATIONS = 50;
 
-        String uuidIgnore = uuid();
+        final String rangeForConditionalFormatting = String.format("A1:%s%s", getColumn(TEST[1] + 1), MAP_SIZE[1] + 1);
 
-        final char[][][] results = new char[PUTS[1]][TEST[1]][NUMBER_OF_ITERATIONS];
+        final char[][][] results = new char[MAP_SIZE[1]][TEST[1]][NUMBER_OF_ITERATIONS];
 
-
+        //Pre-generate data
         final String[] keys = new String[TEST_STEPS * TEST[1]];
         final String[] values = new String[TEST_STEPS * TEST[1]];
         for (int i = 0; i < TEST_STEPS * TEST[1]; i++) {
@@ -41,16 +41,16 @@ public class ManualTests {
         //Anything else are counted and aggregated as a one result;
         for (int iteration = 0; iteration < NUMBER_OF_ITERATIONS; iteration++) {
 
-            for (int puts = PUTS[0]; puts < PUTS[1]; puts++) {
+            for (int puts = MAP_SIZE[0]; puts < MAP_SIZE[1]; puts++) {
 
                 //We gonna create
                 for (int tests = TEST[0]; tests < TEST[1]; tests++) {
 
                     //Start working with HashMap
                     final long hashMapRes;
-
+                    final int allTests = TEST_STEPS * tests;
                     long start = System.nanoTime();
-                    for (int i = 0; i < TEST_STEPS * tests; i++) {
+                    for (int i = 0; i < allTests; i++) {
                         Map<String, String> stringStringMap = new HashMap<>(0);
                         for (int j = 0; j < puts; j++) {
                             stringStringMap.put(keys[i], values[i]);
@@ -64,7 +64,7 @@ public class ManualTests {
                     //Start working with ArrayMap
                     final long arrayMapRes;
                     start = System.nanoTime();
-                    for (int i = 0; i < TEST_STEPS * tests; i++) {
+                    for (int i = 0; i < allTests; i++) {
                         Map<String, String> stringStringMap = new ArrayMap<>();
                         for (int j = 0; j < puts; j++) {
                             stringStringMap.put(keys[i], values[i]);
@@ -102,7 +102,7 @@ public class ManualTests {
             }
 
             int rowCount = 0;
-            for (int puts = PUTS[0]; puts < PUTS[1]; puts++) {
+            for (int puts = MAP_SIZE[0]; puts < MAP_SIZE[1]; puts++) {
                 Row row = sheet.createRow(++rowCount);
                 row.createCell(0).setCellValue(puts);
                 int columnCount = 0;
@@ -132,7 +132,7 @@ public class ManualTests {
             fill2.setFillPattern(PatternFormatting.SOLID_FOREGROUND);
 
             CellRangeAddress[] regions = {
-                    CellRangeAddress.valueOf(range)
+                    CellRangeAddress.valueOf(rangeForConditionalFormatting)
             };
             sheetCF.addConditionalFormatting(regions, rule1, rule2);
 
