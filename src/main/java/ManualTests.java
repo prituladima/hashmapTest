@@ -22,7 +22,7 @@ public class ManualTests {
         final int[] TEST = {1, 10};
         final int TEST_STEPS = 100;
 
-        final int WARN_UP_ITERATIONS = 5;
+        final int WARN_UP_ITERATIONS = 25;
         final int NUMBER_OF_ITERATIONS = 50;
 
         final String rangeForConditionalFormatting = String.format("A1:%s%s", getColumn(TEST[1] + 1), MAP_SIZE[1] + 1);
