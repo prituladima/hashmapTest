@@ -2,90 +2,104 @@ import androidx.collection.ArrayMap;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFSheetConditionalFormatting;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.apache.poi.ss.usermodel.ComparisonOperator.EQUAL;
 
 
 public class ManualTests {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
 
         final long globalStart = System.currentTimeMillis();
 
-        final int[] MAP_SIZE = {1, 300};
-        final int[] TEST = {1, 10};
+        final int[] MAP_SIZE = {1, 20};
+        final int[] TEST = {10000, 10001};
         final int TEST_STEPS = 100;
 
-        final int WARN_UP_ITERATIONS = 25;
-        final int NUMBER_OF_ITERATIONS = 50;
+        final int WARN_UP_ITERATIONS = 0;
+        final int NUMBER_OF_ITERATIONS = 1;
 
         final String rangeForConditionalFormatting = String.format("A1:%s%s", getColumn(TEST[1] + 1), MAP_SIZE[1] + 1);
 
         final char[][][] results = new char[MAP_SIZE[1]][TEST[1]][NUMBER_OF_ITERATIONS];
 
         //Pre-generate data
-        final String[] keys = new String[TEST_STEPS * TEST[1]];
-        final String[] values = new String[TEST_STEPS * TEST[1]];
-        for (int i = 0; i < TEST_STEPS * TEST[1]; i++) {
+        final String[] keys = new String[MAP_SIZE[1]];
+        final String[] values = new String[MAP_SIZE[1]];
+        for (int i = 0; i < MAP_SIZE[1]; i++) {
             keys[i] = uuid();
             values[i] = uuid();
         }
 
-        //First 5 iterations are for warm-up and are not counted;
+        ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+        CountDownLatch countDownLatch = new CountDownLatch(NUMBER_OF_ITERATIONS);
+        //First iterations are for warm-up and are not counted;
         //Anything else are counted and aggregated as a one result;
         for (int iteration = 0; iteration < NUMBER_OF_ITERATIONS; iteration++) {
 
-            for (int puts = MAP_SIZE[0]; puts < MAP_SIZE[1]; puts++) {
+            final int localIteration = iteration;
+            final Runnable runnable = () -> {
 
-                //We gonna create
-                for (int tests = TEST[0]; tests < TEST[1]; tests++) {
+//                for (final int puts : shuffled(MAP_SIZE[0], MAP_SIZE[1])) {
+                for (int puts = MAP_SIZE[0]; puts < MAP_SIZE[1]; puts++) {
 
-                    //Start working with HashMap
-                    final long hashMapRes;
-                    final int allTests = TEST_STEPS * tests;
-                    long start = System.nanoTime();
-                    for (int i = 0; i < allTests; i++) {
-                        Map<String, String> stringStringMap = new HashMap<>(0);
-                        for (int j = 0; j < puts; j++) {
-                            stringStringMap.put(keys[i], values[i]);
+                    //We gonna create
+//                    for (final int tests : shuffled(TEST[0], TEST[1])) {
+                    for (int tests = TEST[0]; tests < TEST[1]; tests++) {
+
+                        //Start working with HashMap
+                        final long hashMapRes;
+                        final int allTests = TEST_STEPS * tests;
+                        long start = System.nanoTime();
+                        for (int i = 0; i < allTests; i++) {
+                            Map<String, String> stringStringMap = new HashMap<>();
+                            for (int j = 0; j < puts; j++) {
+                                stringStringMap.put(keys[j], values[j]);
+                            }
                         }
-                    }
-                    long end = System.nanoTime();
-                    hashMapRes = end - start;
-                    //End working with HashMap
+                        long end = System.nanoTime();
+                        hashMapRes = end - start;
+                        //End working with HashMap
 
 
-                    //Start working with ArrayMap
-                    final long arrayMapRes;
-                    start = System.nanoTime();
-                    for (int i = 0; i < allTests; i++) {
-                        Map<String, String> stringStringMap = new ArrayMap<>();
-                        for (int j = 0; j < puts; j++) {
-                            stringStringMap.put(keys[i], values[i]);
+                        //Start working with ArrayMap
+                        final long arrayMapRes;
+                        start = System.nanoTime();
+                        for (int i = 0; i < allTests; i++) {
+                            Map<String, String> stringStringMap = new ArrayMap<>();
+                            for (int j = 0; j < puts; j++) {
+                                stringStringMap.put(keys[j], values[j]);
+                            }
                         }
-                    }
-                    end = System.nanoTime();
+                        end = System.nanoTime();
 
-                    arrayMapRes = end - start;
-                    //End working with ArrayMap
+                        arrayMapRes = end - start;
+                        //End working with ArrayMap
 
 
 //                    if (Math.abs(hashMapRes - arrayMapRes) < 50) {
 //                        results[puts][tests][k] = '\0';
 //                    } else {
-                    results[puts][tests][iteration] = hashMapRes > arrayMapRes ? 'A' : 'H';
+                        results[puts][tests][localIteration] = hashMapRes > arrayMapRes ? 'A' : 'H';
 //                    }
 
-                }
+                    }
 
-            }
+                }
+                countDownLatch.countDown();
+            };
+            executorService.submit(runnable);
         }
+        countDownLatch.await();
+        executorService.shutdown();
 
         XSSFWorkbook workbook = new XSSFWorkbook();
         for (int iteration = 0; iteration < NUMBER_OF_ITERATIONS + 1; iteration++) {
@@ -143,6 +157,25 @@ public class ManualTests {
         }
 
         System.out.printf("Time needed in min: %f%n", (System.currentTimeMillis() - globalStart) / (60.0 * 1000));
+    }
+
+    private static int[] shuffled(int from, int upTo) {
+        int[] ans = new int[upTo - from];
+        for (int i = from; i < upTo; i++) {
+            ans[i - from] = i;
+        }
+        shuffle(ans);
+        return ans;
+    }
+
+    public static void shuffle(int[] array) {
+        Random random = new Random();
+        for (int i = 0, j; i < array.length; i++) {
+            j = i + random.nextInt(array.length - i);
+            int buf = array[j];
+            array[j] = array[i];
+            array[i] = buf;
+        }
     }
 
     protected static String getColumn(int columnNumber) {
