@@ -26,19 +26,20 @@ public class ManualTests {
 
         final int nThreads = Runtime.getRuntime().availableProcessors();
 
-        final int[] SIZES = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+        final int[] SIZES = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        final int maxSize = Arrays.stream(SIZES).max().getAsInt() + 1;
 
         final int TESTS = 1_000_000;
 
         final int WARN_UP_ITERATIONS = 0;
         final int NUMBER_OF_ITERATIONS = 200;
 
-        final char[][] resultsMemo = new char[SIZES.length][NUMBER_OF_ITERATIONS];
+        final char[][] resultsMemo = new char[maxSize][NUMBER_OF_ITERATIONS];
 
         //Pre-generate data
-        final String[] keys = new String[SIZES.length];
-        final String[] values = new String[SIZES.length];
-        for (int i = 0; i < SIZES.length; i++) {
+        final String[] keys = new String[maxSize];
+        final String[] values = new String[maxSize];
+        for (int i = 0; i < maxSize; i++) {
             keys[i] = Util.uuid();
             values[i] = Util.uuid();
         }
@@ -134,11 +135,11 @@ public class ManualTests {
 
                             if (hashMapRes == arrayMapRes && hashMapRes == treeMapRes) {
                                 resultsMemo[site][localIteration] = '\0';
-                            } else if (hashMapRes < arrayMapRes && hashMapRes < treeMapRes) {
+                            } else if (hashMapRes <= arrayMapRes && hashMapRes <= treeMapRes) {
                                 resultsMemo[site][localIteration] = 'H';
-                            } else if (arrayMapRes < hashMapRes && arrayMapRes < treeMapRes) {
+                            } else if (arrayMapRes <= hashMapRes && arrayMapRes <= treeMapRes) {
                                 resultsMemo[site][localIteration] = 'A';
-                            } else {
+                            } else if (treeMapRes <= hashMapRes && treeMapRes <= arrayMapRes){
                                 resultsMemo[site][localIteration] = 'T';
                             }
 

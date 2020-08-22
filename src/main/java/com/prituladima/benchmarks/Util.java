@@ -62,9 +62,6 @@ public class Util {
                 maxChar = ch;
             }
         }
-        if (multiSet.getOrDefault('H', 0).equals(multiSet.getOrDefault('A', 0))) {
-            return '\0';
-        }
         return maxChar;
     }
 
