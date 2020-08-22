@@ -24,14 +24,14 @@ public class ManualTests {
 
         final long globalStart = System.currentTimeMillis();
 
-        final int nThreads = Runtime.getRuntime().availableProcessors() - 1;//
+        final int nThreads = Runtime.getRuntime().availableProcessors();
 
-        final int[] SIZES = {0, 1, 2, 3, 4, 5};
+        final int[] SIZES = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 
-        final int TESTS = 100_000_000;
+        final int TESTS = 1_000_000;
 
         final int WARN_UP_ITERATIONS = 0;
-        final int NUMBER_OF_ITERATIONS = 32;
+        final int NUMBER_OF_ITERATIONS = 200;
 
         final char[][] resultsMemo = new char[SIZES.length][NUMBER_OF_ITERATIONS];
 
@@ -76,7 +76,7 @@ public class ManualTests {
                                 hashMapRes = end - start;
                                 //End working with HashMap
 
-                                holder1 = null;
+                                blackHole(holder1);
                             }
                             ////////////////////////////////////////////
                             ////////////////////////////////////////////
@@ -101,12 +101,49 @@ public class ManualTests {
 
                                 arrayMapRes = end - start;
                                 //End working with ArrayMap
-                                holder2 = null;
+                                blackHole(holder2);
                             }
-                            if (hashMapRes == arrayMapRes)
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+
+                            final long treeMapRes;
+                            {
+                                int amountOfTests = TESTS / Math.max(site, 1);
+                                Map[] holder1 = new Map[amountOfTests];
+
+                                //Start working with TreeMap
+                                long start = System.currentTimeMillis();
+                                for (int i = 0; i < amountOfTests; i++) {
+                                    final Map<String, String> stringStringMap = new TreeMap<>();
+                                    for (int j = 0; j < site; j++) {
+                                        stringStringMap.put(keys[j], values[j]);
+                                    }
+                                    holder1[i] = stringStringMap;
+                                }
+                                long end = System.currentTimeMillis();
+                                treeMapRes = end - start;
+                                //End working with TreeMap
+
+                                blackHole(holder1);
+                            }
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+
+                            if (hashMapRes == arrayMapRes && hashMapRes == treeMapRes) {
                                 resultsMemo[site][localIteration] = '\0';
-                            else
-                                resultsMemo[site][localIteration] = hashMapRes > arrayMapRes ? 'A' : 'H';
+                            } else if (hashMapRes < arrayMapRes && hashMapRes < treeMapRes) {
+                                resultsMemo[site][localIteration] = 'H';
+                            } else if (arrayMapRes < hashMapRes && arrayMapRes < treeMapRes) {
+                                resultsMemo[site][localIteration] = 'A';
+                            } else {
+                                resultsMemo[site][localIteration] = 'T';
+                            }
 
 //                            synchronized (ManualTests.class) {
 //                                System.out.printf("size = %s hashMapRes = %s and arrayMapRes = %s => winner %c\n",
@@ -184,10 +221,15 @@ public class ManualTests {
             fill2.setFillBackgroundColor(IndexedColors.GREEN.index);
             fill2.setFillPattern(PatternFormatting.SOLID_FOREGROUND);
 
+            ConditionalFormattingRule rule3 = sheetCF.createConditionalFormattingRule(EQUAL, "\"T\"");
+            PatternFormatting fill3 = rule3.createPatternFormatting();
+            fill3.setFillBackgroundColor(IndexedColors.BLUE.index);
+            fill3.setFillPattern(PatternFormatting.SOLID_FOREGROUND);
+
             final CellRangeAddress[] regions = {
                     CellRangeAddress.valueOf(rangeForConditionalFormatting)
             };
-            sheetCF.addConditionalFormatting(regions, rule1, rule2);
+            sheetCF.addConditionalFormatting(regions, new ConditionalFormattingRule[]{rule1, rule2, rule3});
         }
 
         try (FileOutputStream outputStream = new FileOutputStream("HashMap and ArrayMap heat map. From " + new Date().getTime() + ".xlsx")) {
@@ -197,6 +239,9 @@ public class ManualTests {
         System.out.printf("Time needed in min: %f%n", (System.currentTimeMillis() - globalStart) / (60.0 * 1000));
     }
 
+    private static void blackHole(Map[] map) {
+
+    }
 
 }
 //https://medium.com/@mohom.r/optimising-android-app-performance-with-arraymap-9296f4a1f9eb
