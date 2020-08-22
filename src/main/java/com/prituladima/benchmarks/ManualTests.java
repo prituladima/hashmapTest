@@ -3,6 +3,7 @@ package com.prituladima.benchmarks;
 import androidx.collection.ArrayMap;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -21,23 +22,23 @@ public class ManualTests {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
-        final int nThreads = 2 * Runtime.getRuntime().availableProcessors() - 1;
-
         final long globalStart = System.currentTimeMillis();
 
-        final int[] MAP_SIZE = {1, 5};
-        final int[] TEST = {10000, 10001};
-        final int TEST_STEPS = 100;
+        final int nThreads = Runtime.getRuntime().availableProcessors() - 1;//
+
+        final int[] SIZES = {0, 1, 2, 3, 4, 5};
+
+        final int TESTS = 100_000_000;
 
         final int WARN_UP_ITERATIONS = 0;
         final int NUMBER_OF_ITERATIONS = 32;
 
-        final char[][][] resultsMemo = new char[MAP_SIZE[1]][TEST[1]][NUMBER_OF_ITERATIONS];
+        final char[][] resultsMemo = new char[SIZES.length][NUMBER_OF_ITERATIONS];
 
         //Pre-generate data
-        final String[] keys = new String[MAP_SIZE[1]];
-        final String[] values = new String[MAP_SIZE[1]];
-        for (int i = 0; i < MAP_SIZE[1]; i++) {
+        final String[] keys = new String[SIZES.length];
+        final String[] values = new String[SIZES.length];
+        for (int i = 0; i < SIZES.length; i++) {
             keys[i] = Util.uuid();
             values[i] = Util.uuid();
         }
@@ -55,62 +56,72 @@ public class ManualTests {
             final Runnable runnable =
                     () -> {
 
-                        for (int puts = MAP_SIZE[0]; puts < MAP_SIZE[1]; puts++) {
-                            for (int tests = TEST[0]; tests < TEST[1]; tests++) {
-                                final int allTests = TEST_STEPS * tests;
+                        for (final int site : SIZES) {
 
-                                Map[] holder1 = new Map[allTests];
+                            final long hashMapRes;
+                            {
+                                int amountOfTests = TESTS / Math.max(site, 1);
+                                Map[] holder1 = new Map[amountOfTests];
 
                                 //Start working with HashMap
-                                final long hashMapRes;
-                                long start = System.nanoTime();
-                                for (int i = 0; i < allTests; i++) {
+                                long start = System.currentTimeMillis();
+                                for (int i = 0; i < amountOfTests; i++) {
                                     final Map<String, String> stringStringMap = new HashMap<>();
-                                    for (int j = 0; j < puts; j++) {
+                                    for (int j = 0; j < site; j++) {
                                         stringStringMap.put(keys[j], values[j]);
                                     }
                                     holder1[i] = stringStringMap;
                                 }
-                                long end = System.nanoTime();
+                                long end = System.currentTimeMillis();
                                 hashMapRes = end - start;
                                 //End working with HashMap
 
                                 holder1 = null;
-
-                                Map[] holder2 = new Map[allTests];
+                            }
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            ////////////////////////////////////////////
+                            final long arrayMapRes;
+                            {
+                                int amountOfTests = TESTS / Math.max(site, 1);
+                                Map[] holder2 = new Map[amountOfTests];
 
                                 //Start working with ArrayMap
-                                final long arrayMapRes;
-                                start = System.nanoTime();
-                                for (int i = 0; i < allTests; i++) {
+                                long start = System.currentTimeMillis();
+                                for (int i = 0; i < amountOfTests; i++) {
                                     final Map<String, String> stringStringMap = new ArrayMap<>();
-                                    for (int j = 0; j < puts; j++) {
+                                    for (int j = 0; j < site; j++) {
                                         stringStringMap.put(keys[j], values[j]);
                                     }
                                     holder2[i] = stringStringMap;
                                 }
-                                end = System.nanoTime();
+                                long end = System.currentTimeMillis();
 
                                 arrayMapRes = end - start;
                                 //End working with ArrayMap
                                 holder2 = null;
-
-//                    if (Math.abs(hashMapRes - arrayMapRes) < 50) {
-//                        resultsMemo[puts][tests][k] = '\0';
-//                    } else {
-                                resultsMemo[puts][tests][localIteration] = hashMapRes > arrayMapRes ? 'A' : 'H';
-//                    }
-                                synchronized (ManualTests.class) {
-                                    System.out.printf("hashMapRes = %s and arrayMapRes = %s => winner %c\n",
-                                            hashMapRes,
-                                            arrayMapRes,
-                                            resultsMemo[puts][tests][localIteration]
-                                    );
-                                }
                             }
+                            if (hashMapRes == arrayMapRes)
+                                resultsMemo[site][localIteration] = '\0';
+                            else
+                                resultsMemo[site][localIteration] = hashMapRes > arrayMapRes ? 'A' : 'H';
+
+//                            synchronized (ManualTests.class) {
+//                                System.out.printf("size = %s hashMapRes = %s and arrayMapRes = %s => winner %c\n",
+//                                        site,
+//                                        hashMapRes,
+//                                        arrayMapRes,
+//                                        resultsMemo[site][localIteration]
+//                                );
+//                            }
 
                         }
                         countDownLatch.countDown();
+//                        synchronized (ManualTests.class) {
+//                            System.out.println(countDownLatch.getCount());
+//                        }
                     };
             executorService.submit(runnable);
         }
@@ -118,38 +129,49 @@ public class ManualTests {
         executorService.shutdown();
 
         final XSSFWorkbook workbook = new XSSFWorkbook();
-        final String rangeForConditionalFormatting = Util.getGridRange(TEST[1] + 1, MAP_SIZE[1] + 1);
-        for (int iteration = 0; iteration < NUMBER_OF_ITERATIONS + 1; iteration++) {
+        final XSSFSheet sheet = workbook.createSheet("Aggregated");
 
+        {
+            final XSSFRow rowWithSized = sheet.createRow(0);
+            int pointer = 1;
+            for (int size : SIZES) {
+//                final String colName = String.format("%s #%d.", iteration < WARN_UP_ITERATIONS ? "Warm up" : "Iteration", iteration);
+                rowWithSized
+                        .createCell(pointer++)
+                        .setCellValue(String.format("Size #%d.", size));
+            }
+        }
 
-            String name = String.format("%s #%d.", iteration < WARN_UP_ITERATIONS ? "Warm up" : "Iteration", iteration);
-            XSSFSheet sheet = workbook.createSheet(iteration == NUMBER_OF_ITERATIONS ? "Aggregated" : name);
+        for (int iteration = 1; iteration <= NUMBER_OF_ITERATIONS; iteration++) {
 
-            int firstColumnCount = 0;
-            Row firstRow = sheet.createRow(0);
-            for (int tests = TEST[0]; tests < TEST[1]; tests++) {
-                firstRow.createCell(++firstColumnCount)
-                        .setCellValue(String.valueOf(TEST_STEPS * tests));
+            final XSSFRow rowWithResults = sheet.createRow(iteration);
+
+            rowWithResults.createCell(0).setCellValue(String.format("It: #%d", iteration));
+
+            int colPointer = 1;
+            for (final int site : SIZES) {
+                char res = resultsMemo[site][iteration - 1];
+                rowWithResults.createCell(colPointer++).setCellValue(String.valueOf(res));
+            }
+        }
+
+        {
+
+            final XSSFRow rowWithResults = sheet.createRow(NUMBER_OF_ITERATIONS + 1);
+
+            rowWithResults.createCell(0).setCellValue("Res:");
+
+            int colPointer = 1;
+            for (final int site : SIZES) {
+                char res = Util.getMostRepeatingCharacter(Arrays.copyOfRange(resultsMemo[site], WARN_UP_ITERATIONS, NUMBER_OF_ITERATIONS));
+                rowWithResults.createCell(colPointer++).setCellValue(String.valueOf(res));
             }
 
-            int rowCount = 0;
-            for (int puts = MAP_SIZE[0]; puts < MAP_SIZE[1]; puts++) {
-                Row row = sheet.createRow(++rowCount);
-                row.createCell(0).setCellValue(puts);
-                int columnCount = 0;
-                for (int tests = TEST[0]; tests < TEST[1]; tests++) {
-                    char res;
-                    if (iteration == NUMBER_OF_ITERATIONS) {
-                        res = Util.getMostRepeatingCharacter(Arrays.copyOfRange(resultsMemo[puts][tests], WARN_UP_ITERATIONS, NUMBER_OF_ITERATIONS));
-                    } else {
-                        res = resultsMemo[puts][tests][iteration];
-                    }
-                    String s = String.valueOf(res == '\0' ? "" : res);
-                    Cell cell = row.createCell(++columnCount);
-                    cell.setCellValue(s);
+        }
 
-                }
-            }
+        final String rangeForConditionalFormatting = Util.getGridRange(SIZES.length + 1, NUMBER_OF_ITERATIONS + 2);
+
+        {
             SheetConditionalFormatting sheetCF = sheet.getSheetConditionalFormatting();
 
             ConditionalFormattingRule rule1 = sheetCF.createConditionalFormattingRule(EQUAL, "\"H\"");
@@ -162,11 +184,10 @@ public class ManualTests {
             fill2.setFillBackgroundColor(IndexedColors.GREEN.index);
             fill2.setFillPattern(PatternFormatting.SOLID_FOREGROUND);
 
-            CellRangeAddress[] regions = {
+            final CellRangeAddress[] regions = {
                     CellRangeAddress.valueOf(rangeForConditionalFormatting)
             };
             sheetCF.addConditionalFormatting(regions, rule1, rule2);
-
         }
 
         try (FileOutputStream outputStream = new FileOutputStream("HashMap and ArrayMap heat map. From " + new Date().getTime() + ".xlsx")) {

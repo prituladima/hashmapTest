@@ -6,13 +6,12 @@ import java.util.Random;
 import java.util.UUID;
 
 public class Util {
-    public static String getGridRange(int a, int b) {
-        return String.format("A1:%s%s", getColumn(a), b);
+    public static String getGridRange(int rightColumn, int bottomRow) {
+        return String.format("A1:%s%s", getColumnInExcelFormat(rightColumn), bottomRow);
     }
 
-    protected static String getColumn(int columnNumber) {
-
-        StringBuilder columnName = new StringBuilder();
+    private static String getColumnInExcelFormat(int columnNumber) {
+        final StringBuilder columnName = new StringBuilder();
         while (columnNumber > 0) {
             int rem = columnNumber % 26;
             if (rem == 0) {
