@@ -57,11 +57,11 @@ public class ManualTests {
                     () -> {
 
                         for (final int site : SIZES) {
+                            int amountOfTests = TESTS / Math.max(site, 1);
 
                             final long hashMapRes;
                             {
-                                int amountOfTests = TESTS / Math.max(site, 1);
-                                Map[] holder1 = new Map[amountOfTests];
+//                                Map[] holder1 = new Map[amountOfTests];
 
                                 //Start working with HashMap
                                 long start = System.currentTimeMillis();
@@ -70,13 +70,13 @@ public class ManualTests {
                                     for (int j = 0; j < site; j++) {
                                         stringStringMap.put(keys[j], values[j]);
                                     }
-                                    holder1[i] = stringStringMap;
+                                    blackHole(stringStringMap);
                                 }
                                 long end = System.currentTimeMillis();
                                 hashMapRes = end - start;
                                 //End working with HashMap
 
-                                blackHole(holder1);
+
                             }
                             ////////////////////////////////////////////
                             ////////////////////////////////////////////
@@ -85,8 +85,7 @@ public class ManualTests {
                             ////////////////////////////////////////////
                             final long arrayMapRes;
                             {
-                                int amountOfTests = TESTS / Math.max(site, 1);
-                                Map[] holder2 = new Map[amountOfTests];
+//                                Map[] holder2 = new Map[amountOfTests];
 
                                 //Start working with ArrayMap
                                 long start = System.currentTimeMillis();
@@ -95,13 +94,13 @@ public class ManualTests {
                                     for (int j = 0; j < site; j++) {
                                         stringStringMap.put(keys[j], values[j]);
                                     }
-                                    holder2[i] = stringStringMap;
+                                    blackHole(stringStringMap);
                                 }
                                 long end = System.currentTimeMillis();
 
                                 arrayMapRes = end - start;
                                 //End working with ArrayMap
-                                blackHole(holder2);
+
                             }
                             ////////////////////////////////////////////
                             ////////////////////////////////////////////
@@ -111,8 +110,7 @@ public class ManualTests {
 
                             final long treeMapRes;
                             {
-                                int amountOfTests = TESTS / Math.max(site, 1);
-                                Map[] holder1 = new Map[amountOfTests];
+//                                Map[] holder1 = new Map[amountOfTests];
 
                                 //Start working with TreeMap
                                 long start = System.currentTimeMillis();
@@ -121,13 +119,12 @@ public class ManualTests {
                                     for (int j = 0; j < site; j++) {
                                         stringStringMap.put(keys[j], values[j]);
                                     }
-                                    holder1[i] = stringStringMap;
+                                    blackHole(stringStringMap);
                                 }
                                 long end = System.currentTimeMillis();
                                 treeMapRes = end - start;
                                 //End working with TreeMap
 
-                                blackHole(holder1);
                             }
                             ////////////////////////////////////////////
                             ////////////////////////////////////////////
@@ -239,7 +236,7 @@ public class ManualTests {
         System.out.printf("Time needed in min: %f%n", (System.currentTimeMillis() - globalStart) / (60.0 * 1000));
     }
 
-    private static void blackHole(Map[] map) {
+    private static void blackHole(Map<?, ?> map) {
 
     }
 
