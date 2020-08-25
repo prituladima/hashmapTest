@@ -154,6 +154,12 @@ questions.
             <artifactId>poi-ooxml</artifactId>
             <version>4.1.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.example</groupId>
+            <artifactId>MapsInvestigation</artifactId>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/lib/MapsInvestigation-1.0-SNAPSHOT.jar</systemPath>
+        </dependency>
 
 
     </dependencies>
