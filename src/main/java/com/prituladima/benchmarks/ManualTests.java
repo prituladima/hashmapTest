@@ -24,12 +24,23 @@ public class ManualTests {
 
         final long globalStart = System.currentTimeMillis();
 
-        final int nThreads = Runtime.getRuntime().availableProcessors();
+        final int cores = Runtime.getRuntime().availableProcessors();
 
-        final int[] SIZES = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+        final int[] SIZES = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
         final int maxSize = Arrays.stream(SIZES).max().getAsInt() + 1;
 
-        final int TESTS = 1_000_000;
+        final int TESTS = 10_000_000;
+
+        final int baseAllCoresIterations = 10_000_000 * 3 / 16;
+        final int allCoresIterations = TESTS * SIZES.length / cores;
+
+        final double baseExpectedTime = 7.286;
+        final double expected_time = baseExpectedTime * allCoresIterations / baseAllCoresIterations;
+
+        System.out.printf("Expected time: %f min. Do you want to continue? Y/N: ", expected_time);
+        if (!"Y".equalsIgnoreCase(new Scanner(System.in).next())) {
+            System.exit(0);
+        }
 
         final int WARN_UP_ITERATIONS = 0;
         final int NUMBER_OF_ITERATIONS = 200;
@@ -45,7 +56,7 @@ public class ManualTests {
         }
 
 
-        final ExecutorService executorService = Executors.newFixedThreadPool(nThreads);
+        final ExecutorService executorService = Executors.newFixedThreadPool(cores);
         final CountDownLatch countDownLatch = new CountDownLatch(NUMBER_OF_ITERATIONS);
 
 
@@ -139,7 +150,7 @@ public class ManualTests {
                                 resultsMemo[site][localIteration] = 'H';
                             } else if (arrayMapRes <= hashMapRes && arrayMapRes <= treeMapRes) {
                                 resultsMemo[site][localIteration] = 'A';
-                            } else if (treeMapRes <= hashMapRes && treeMapRes <= arrayMapRes){
+                            } else if (treeMapRes <= hashMapRes && treeMapRes <= arrayMapRes) {
                                 resultsMemo[site][localIteration] = 'T';
                             }
 
