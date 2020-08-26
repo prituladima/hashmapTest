@@ -6,8 +6,10 @@ import com.prituladima.memory.InstrumentationAgent;
 import java.util.HashMap;
 import java.util.Map;
 
+//Run with -javaagent:"/Users/dmprytul/IdeaProjects/hashmapTest/lib/MapsInvestigation-1.0-SNAPSHOT.jar"
 public class MemoryTest {
     public static void main(String[] args) {
+        InstrumentationAgent.turnOnDebug();
         Map<Object, Object> o = new HashMap<>();
 
         System.out.printf("HashMap : %d\n", InstrumentationAgent.deepSizeOf(o));
