@@ -3,9 +3,7 @@ package com.prituladima.benchmarks;
 import androidx.collection.ArrayMap;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.*;
 
 
 import java.io.FileOutputStream;
@@ -18,7 +16,7 @@ import java.util.concurrent.Executors;
 import static org.apache.poi.ss.usermodel.ComparisonOperator.EQUAL;
 
 
-public class ManualTests {
+public class ReportGenerator {
 
     public static void main(String[] args) throws IOException, InterruptedException {
 
@@ -29,7 +27,7 @@ public class ManualTests {
         final int[] SIZES = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
         final int maxSize = Arrays.stream(SIZES).max().getAsInt() + 1;
 
-        final int TESTS = 10_000_000;
+        final int TESTS = 10_000;
 
         final int baseAllCoresIterations = 10_000_000 * 3 / 16;
         final int allCoresIterations = TESTS * SIZES.length / cores;
@@ -43,7 +41,7 @@ public class ManualTests {
         }
 
         final int WARN_UP_ITERATIONS = 0;
-        final int NUMBER_OF_ITERATIONS = 200;
+        final int NUMBER_OF_ITERATIONS = 10;
 
         final char[][] resultsMemo = new char[maxSize][NUMBER_OF_ITERATIONS];
 
